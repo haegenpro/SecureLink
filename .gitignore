@@ -1,0 +1,32 @@
+# Binaries
+/bin/
+/dist/
+*.exe
+*.test
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Local data
+*.db
+*.sqlite
+*.sqlite3
+data/
+
+# Terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/.terraform.lock.hcl
+terraform/*.tfvars
+!terraform/*.tfvars.example
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

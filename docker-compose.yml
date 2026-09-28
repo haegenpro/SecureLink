@@ -1,0 +1,59 @@
+services:
+  localstack:
+    image: localstack/localstack:3
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3,sqs
+      - DEFAULT_REGION=us-east-1
+    volumes:
+      - ./scripts/localstack-init.sh:/etc/localstack/init/ready.d/init.sh
+      - localstack-data:/var/lib/localstack
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      target: api
+    ports:
+      - "8080:8080"
+    environment:
+      - API_ADDR=:8080
+      - DB_PATH=/data/securelink.db
+      - AWS_REGION=us-east-1
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - S3_BUCKET=securelink-files
+      - SQS_QUEUE_URL=http://localstack:4566/000000000000/securelink-events
+    volumes:
+      - securelink-data:/data
+    depends_on:
+      localstack:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: .
+      target: worker
+    environment:
+      - DB_PATH=/data/securelink.db
+      - AWS_REGION=us-east-1
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - S3_BUCKET=securelink-files
+      - SQS_QUEUE_URL=http://localstack:4566/000000000000/securelink-events
+    volumes:
+      - securelink-data:/data
+    depends_on:
+      localstack:
+        condition: service_healthy
+
+volumes:
+  localstack-data:
+  securelink-data:
